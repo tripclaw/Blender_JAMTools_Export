@@ -35,6 +35,13 @@ class JAMExport_PT_panel(bpy.types.Panel):
         row = layout.row()
         export = layout.operator('export_scene.fbx', text='Export', icon='EXPORT')
         export.filepath = export_prop.file_path + bpy.context.view_layer.active_layer_collection.name
+        # default settings
+        export.use_selection = False
+        export.use_active_collection = True
+        export.bake_space_transform = True
+        export.object_types = {'ARMATURE', 'EMPTY', 'MESH', 'OTHER'}
+        export.use_tspace = True
+        export.bake_anim = False        
 
 
 def register():    
