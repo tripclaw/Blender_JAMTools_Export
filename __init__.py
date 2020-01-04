@@ -12,48 +12,20 @@ bl_info = {
 
 import bpy
 
-class JAMExportSettings(bpy.types.PropertyGroup):
-    file_path: bpy.props.StringProperty(name="File path",
-                                        description="File path to export to",
-                                        default="",
-                                        maxlen=1024,
-                                        subtype="FILE_PATH")
-
-class JAMExport_PT_panel(bpy.types.Panel):
-    bl_label = "JAM"
-    bl_category = "JAM"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-
-        export_prop = context.scene.jam_export
-        row.prop(export_prop, "file_path")
-
-        row = layout.row()
-        export = layout.operator('export_scene.fbx', text='Export', icon='EXPORT')
-        export.filepath = export_prop.file_path + bpy.context.view_layer.active_layer_collection.name
-        # default settings
-        export.use_selection = False
-        export.use_active_collection = True
-        export.bake_space_transform = True
-        export.object_types = {'ARMATURE', 'EMPTY', 'MESH', 'OTHER'}
-        export.use_tspace = True
-        export.bake_anim = False        
-
-
+#if "bpy" in locals():
+    #import importlib
+    #if "jamexport" in locals():
+        #importlib.reload(jamexport)
+#else:
+    #from . import jamexport
+    
+from . import jamexport
+    
 def register():    
-    bpy.utils.register_class(JAMExportSettings)
-    bpy.utils.register_class(JAMExport_PT_panel)
-    bpy.types.Scene.jam_export = bpy.props.PointerProperty(type=JAMExportSettings)
-
+    jamexport.register()
 
 def unregister():
-    bpy.utils.unregister_class(JAMExportSettings)
-    bpy.utils.unregister_class(JAMExport_PT_panel)
-    del bpy.types.Scene.jam_export
+    jamexport.unregister()
 
 if __name__ == "__main__":
     register()
