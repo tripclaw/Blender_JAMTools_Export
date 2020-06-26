@@ -40,16 +40,31 @@ class JAMExport_PT_panel(bpy.types.Panel):
         row = layout.row()
         row.prop(context.scene, "FBX_Preset")
 
-        layout.label(text=bpy.context.view_layer.active_layer_collection.name + ".fbx")
+        file_icon='PLUS'
+        allow_export = True;
+
+        # check if file exists
+        export_data = context.scene.jam_export_data
+        if not export_data.file_path:
+                file_icon = 'PLUS'  
+        else:
+            abspath = bpy.path.abspath(export_data.file_path)
+            full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
+            if os.path.isfile(full_filename):
+                file_icon = 'CHECKMARK'
+            else:
+                file_icon = 'PLUS'             
+        if bpy.context.view_layer.active_layer_collection.name == 'Master Collection': 
+                file_icon = 'CANCEL'
+                allow_export = False;
+
+        layout.label(text=bpy.context.view_layer.active_layer_collection.name + ".fbx", icon=file_icon)
 
         row = layout.row()
-        export = layout.operator('export.quick_fbx', text='Export', icon='EXPORT')
+        export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')
 
-
-        # preset_path = bpy.utils.preset_paths('operator/export_scene.fbx/')
-        # print (preset_path)
-        # presets = os.listdir(preset_path[0])
-        # print (presets)
+        if not allow_export: 
+            row.enabled = False # gray out export if on Master Collection (root scene collection)
 
 class JAMExport_Op(bpy.types.Operator):
     """Export fbx to saved path"""
