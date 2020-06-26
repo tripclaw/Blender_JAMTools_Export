@@ -56,10 +56,9 @@ class JAMExport_Op(bpy.types.Operator):
     bl_idname = "export.quick_fbx"
     bl_label = "Export FBX to a stored path"
 
-    #filepath = bpy.props.StringProperty(subtype="FILE_PATH")
     directory = bpy.props.StringProperty(
-        name="Outdir Path",
-        description="Where I will save my stuff"
+        name="Export Path",
+        description="Path to Export To (Relative or Absolute)"
         # subtype='DIR_PATH'
         )        
     
@@ -71,13 +70,15 @@ class JAMExport_Op(bpy.types.Operator):
 
     def execute(self, context):
 
-        if not os.path.exists(self.directory):
-            self.report({'ERROR'}, 'Path does not exist: ' + self.directory)
+        abspath = bpy.path.abspath(self.directory)
+
+        if not os.path.exists(abspath):
+            self.report({'ERROR'}, 'Path does not exist: ' + abspath)
             return {'CANCELLED'}
 
         context.scene.jam_export_data.file_path = self.directory
 
-        full_filename = os.path.join(self.directory, bpy.context.view_layer.active_layer_collection.name + ".fbx")
+        full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
         print('Preset: ' + context.scene.FBX_Preset)
 
         if context.scene.FBX_Preset.lower() != '(none)':
