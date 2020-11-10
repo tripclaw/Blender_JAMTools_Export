@@ -41,7 +41,13 @@ class JAMExport_PT_panel(bpy.types.Panel):
         row.prop(context.scene, "FBX_Preset")
 
         file_icon='PLUS'
-        allow_export = True;
+        allow_export = True
+
+        collection_name = ''
+        if bpy.context.active_object is None:
+            collection_name = bpy.context.view_layer.active_layer_collection.name                
+        else:
+            collection_name = bpy.context.active_object.users_collection.name + ".fbx"
 
         # check if file exists
         export_data = context.scene.jam_export_data
@@ -49,7 +55,9 @@ class JAMExport_PT_panel(bpy.types.Panel):
                 file_icon = 'PLUS'  
         else:
             abspath = bpy.path.abspath(export_data.file_path)
-            full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
+                
+            full_filename = os.path.join(abspath, collection_name  + ".fbx")
+
             if os.path.isfile(full_filename):
                 file_icon = 'CHECKMARK'
             else:
@@ -58,7 +66,7 @@ class JAMExport_PT_panel(bpy.types.Panel):
                 file_icon = 'CANCEL'
                 allow_export = False;
 
-        layout.label(text=bpy.context.view_layer.active_layer_collection.name + ".fbx", icon=file_icon)
+        layout.label(text=collection_name + ".fbx", icon=file_icon)
 
         row = layout.row()
         export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')
@@ -93,7 +101,15 @@ class JAMExport_Op(bpy.types.Operator):
 
         context.scene.jam_export_data.file_path = self.directory
 
-        full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
+        if bpy.context.active_object is None:
+            collection_name = bpy.context.view_layer.active_layer_collection.name                
+        else:
+            collection_name = bpy.context.active_object.users_collection.name + ".fbx"
+                
+        # to do: change collections here before export
+
+        full_filename = os.path.join(abspath, collection_name + ".fbx")
+
         print('Preset: ' + context.scene.FBX_Preset)
 
         if context.scene.FBX_Preset.lower() != '(none)':
