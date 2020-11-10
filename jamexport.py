@@ -40,39 +40,101 @@ class JAMExport_PT_panel(bpy.types.Panel):
         row = layout.row()
         row.prop(context.scene, "FBX_Preset")
 
-        file_icon='PLUS'
-        allow_export = True
+        sublayout = layout.box()
+        
+        sublayout.label(text='Active',)
 
-        collection_name = ''
-        if bpy.context.active_object is None:
-            collection_name = bpy.context.view_layer.active_layer_collection.name                
-        else:
-            collection_name = bpy.context.active_object.users_collection.name + ".fbx"
+        self.layout_item_box(context, sublayout, bpy.context.view_layer.active_layer_collection, True, True)
+
+        sublayout = layout.box()
+
+        sublayout.label(text='Other Collections')
+
+        for collection in bpy.data.collections:
+            
+           # for obj in collection.all_objects:
+            #  print('   obj: ', obj.name)
+
+            is_active_collection = collection.name == bpy.context.view_layer.active_layer_collection.name
+
+
+            #if not is_active_collection:
+                # sublayout = layout.box()
+
+            self.layout_item_box(context, sublayout, collection, is_active_collection, False)
+
+        row = layout.row()
+       
+        # export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')
+
+
+    def layout_item_box(self, context, sublayout, collection, is_active_collection, show_export_button):
+    
+        #if is_active_collection:
+        #    sublayout = sublayout.box()
+
+        file_icon='PLUS'
+        allow_export = True;
+
+        does_file_exist = False
 
         # check if file exists
         export_data = context.scene.jam_export_data
         if not export_data.file_path:
-                file_icon = 'PLUS'  
+                file_icon = 'PLUS'                    
         else:
             abspath = bpy.path.abspath(export_data.file_path)
-                
-            full_filename = os.path.join(abspath, collection_name  + ".fbx")
-
+            full_filename = os.path.join(abspath, collection.name + ".fbx")
             if os.path.isfile(full_filename):
-                file_icon = 'CHECKMARK'
+                file_icon = 'FILE' #CHECKMARK
+                does_file_exist  = True  
             else:
-                file_icon = 'PLUS'             
+                file_icon = 'PLUS' #'FILE_NEW'   
+
         if bpy.context.view_layer.active_layer_collection.name == 'Master Collection': 
                 file_icon = 'CANCEL'
+                does_file_exist  = False  
                 allow_export = False;
 
-        layout.label(text=collection_name + ".fbx", icon=file_icon)
+        row = sublayout.row()
 
-        row = layout.row()
-        export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')
+        status_icon = 'DECORATE_ANIMATE'
+        
+        # if is_active_collection:
+        #    status_icon = 'KEYTYPE_MOVING_HOLD_VEC'
+        collection_name = collection.name
+        
+        if does_file_exist:
+            status_icon = 'DECORATE_KEYFRAME'
+            collection_name = collection.name + ".fbx"
+
+        row.label(text='', icon=status_icon)
+                  
+        if is_active_collection:
+            if not show_export_button:
+                op = row.operator('collection.set_active_collection', text=collection_name)        
+                row.enabled = False
+            else:
+                row.label(text=collection_name) # icon=file_icon
+        else:
+            op = row.operator('collection.set_active_collection', text=collection_name)        
+            op.collection_name = collection.name
+            # op.collection_to_activate = collection
+
+
+        if show_export_button:
+
+            row = sublayout.row()
+
+            if not does_file_exist and is_active_collection:
+                export = row.operator('export.quick_fbx', text='New Export', icon='FILE_NEW')
+                
+            if does_file_exist and is_active_collection:
+                export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')        
 
         if not allow_export: 
             row.enabled = False # gray out export if on Master Collection (root scene collection)
+
 
 class JAMExport_Op(bpy.types.Operator):
     """Export fbx to saved path"""
@@ -101,15 +163,7 @@ class JAMExport_Op(bpy.types.Operator):
 
         context.scene.jam_export_data.file_path = self.directory
 
-        if bpy.context.active_object is None:
-            collection_name = bpy.context.view_layer.active_layer_collection.name                
-        else:
-            collection_name = bpy.context.active_object.users_collection.name + ".fbx"
-                
-        # to do: change collections here before export
-
-        full_filename = os.path.join(abspath, collection_name + ".fbx")
-
+        full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
         print('Preset: ' + context.scene.FBX_Preset)
 
         if context.scene.FBX_Preset.lower() != '(none)':
@@ -194,6 +248,34 @@ class JAMExport_Op(bpy.types.Operator):
         else:
             print ("error: preset path no good")
 
+
+class JAMExport_SetActiveCollection(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "collection.set_active_collection"
+    bl_label = "Set Active Collection"
+
+    collection_name : bpy.props.StringProperty(
+        name="Collection to Activate",
+        description="..."
+        )        
+
+    # can't get this to work...
+    collection_to_activate : bpy.props.CollectionProperty(
+        name="Collection to Activate",
+        description="..."
+        )        
+        
+    def execute(self, context):
+        # scene_collection = bpy.context.view_layer.layer_collection
+        #bpy.context.view_layer.active_layer_collection = self.collection_to_activate
+        coll = bpy.data.collections.get(self.collection_name)
+
+        if coll:
+            layer_collection = bpy.context.view_layer.layer_collection.children[coll.name]
+            bpy.context.view_layer.active_layer_collection = layer_collection
+
+        return {'FINISHED'}
+
 # Presets: 
 class JAMExport_RefreshPresets(bpy.types.Operator):
     """Tooltip"""
@@ -232,6 +314,9 @@ def register():
     bpy.utils.register_class(JAMExportSettings)
     bpy.utils.register_class(JAMExport_PT_panel)
     bpy.utils.register_class(JAMExport_Op)
+    bpy.utils.register_class(JAMExport_SetActiveCollection)
+    
+   
 
     bpy.types.Scene.jam_export_data = bpy.props.PointerProperty(type=JAMExportSettings)
 
@@ -246,6 +331,7 @@ def unregister():
     bpy.utils.unregister_class(JAMExportSettings)
     bpy.utils.unregister_class(JAMExport_PT_panel)
     bpy.utils.unregister_class(JAMExport_Op)
+    bpy.utils.unregister_class(JAMExport_SetActiveCollection)
     
     del bpy.types.Scene.jam_export_data
 
