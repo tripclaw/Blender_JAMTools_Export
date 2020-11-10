@@ -250,7 +250,7 @@ def unregister():
     del bpy.types.Scene.jam_export_data
 
     # presets
-    bpy.utils.unregister_class(RefreshPresets)
+    bpy.utils.unregister_class(JAMExport_RefreshPresets)
     del bpy.types.Scene.FBX_Preset
 
 
