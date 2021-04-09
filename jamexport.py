@@ -24,8 +24,8 @@ class JAMExportSettings(bpy.types.PropertyGroup):
                                         maxlen=1024,
                                         subtype="DIR_PATH")
 
-class JAMExport_PT_panel(bpy.types.Panel):
-    bl_label = "JAM"
+class JAM_EXPORT_PT_panel(bpy.types.Panel):
+    bl_label = "Export Settings"
     bl_category = "JAM"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -39,39 +39,28 @@ class JAMExport_PT_panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(context.scene, "FBX_Preset")
-
-        sublayout = layout.box()
         
-        sublayout.label(text='Active',)
+        # sublayout = layout.box()    
+        # sublayout.label(text='Active')
 
-        self.layout_item_box(context, sublayout, bpy.context.view_layer.active_layer_collection, True, True)
+        # self.layout_item_box(context, sublayout, bpy.context.view_layer.active_layer_collection, True, True)
 
-        sublayout = layout.box()
+        # sublayout = layout.box()        
+        # sublayout.label(text='Export Collections')
 
-        sublayout.label(text='Other Collections')
+        # scn = context.scene
+        # idx = scn.jam_export_sel_index
+        # item = scn.jam_export_collections[idx]   
 
-        for collection in bpy.data.collections:
-            
-           # for obj in collection.all_objects:
-            #  print('   obj: ', obj.name)
-
-            is_active_collection = collection.name == bpy.context.view_layer.active_layer_collection.name
-
-
-            #if not is_active_collection:
-                # sublayout = layout.box()
-
-            self.layout_item_box(context, sublayout, collection, is_active_collection, False)
-
-        row = layout.row()
-       
-        # export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')
+        # for c in scn.jam_export_collections:
+        #    is_active_collection = c.export_collection.name == bpy.context.view_layer.active_layer_collection.name
+        #    self.layout_item_box(context, sublayout, c.export_collection, is_active_collection, False)
 
 
     def layout_item_box(self, context, sublayout, collection, is_active_collection, show_export_button):
-    
-        #if is_active_collection:
-        #    sublayout = sublayout.box()
+
+        if is_active_collection:
+            sublayout = sublayout.box()
 
         file_icon='PLUS'
         allow_export = True;
@@ -107,13 +96,19 @@ class JAMExport_PT_panel(bpy.types.Panel):
         if does_file_exist:
             status_icon = 'DECORATE_KEYFRAME'
             collection_name = collection.name + ".fbx"
-
+        
         row.label(text='', icon=status_icon)
                   
         if is_active_collection:
             if not show_export_button:
                 op = row.operator('collection.set_active_collection', text=collection_name)        
-                row.enabled = False
+                export = row.operator('export.quick_fbx', text='', icon='EXPORT')
+                export.directory = "[[DEFAULT]]"
+                # sel_box = row.box();
+#               # row.heading
+                # row.split(factor=0.0, align=False)
+                # row.label(text=collection_name)                
+                # row.enabled = False
             else:
                 row.label(text=collection_name) # icon=file_icon
         else:
@@ -128,24 +123,41 @@ class JAMExport_PT_panel(bpy.types.Panel):
 
             if not does_file_exist and is_active_collection:
                 export = row.operator('export.quick_fbx', text='New Export', icon='FILE_NEW')
+                export.directory = "[[DEFAULT]]"
+                
+                if not allow_export: 
+                    row.enabled = False # gray out export if on Master Collection (root scene collection)
                 
             if does_file_exist and is_active_collection:
                 export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')        
+                export.directory = "[[DEFAULT]]"
+                
+                if not allow_export: 
+                    row.enabled = False # gray out export if on Master Collection (root scene collection)
 
-        if not allow_export: 
-            row.enabled = False # gray out export if on Master Collection (root scene collection)
 
-
-class JAMExport_Op(bpy.types.Operator):
+class JAM_EXPORT_OT_export(bpy.types.Operator):
     """Export fbx to saved path"""
     bl_idname = "export.quick_fbx"
-    bl_label = "Export FBX to a stored path"
+    bl_label = "Export FBX to a stored path (JAM Tools)"
 
-    directory = bpy.props.StringProperty(
+    directory: bpy.props.StringProperty(
         name="Export Path",
         description="Path to Export To (Relative or Absolute)"
         # subtype='DIR_PATH'
-        )        
+        )
+
+    # export_collection = bpy.props.PointerProperty(
+    #    name="Export Collection",
+    #    description="Collection to Export",
+    #    type=bpy.types.Collection
+    # subtype='DIR_PATH'
+
+
+    export_collection_name:  bpy.props.StringProperty(
+        name="Export Collection",
+        description="Collection to Export"
+    )
     
     @classmethod
     def poll(cls, context):
@@ -163,6 +175,11 @@ class JAMExport_Op(bpy.types.Operator):
 
         context.scene.jam_export_data.file_path = self.directory
 
+        # Change active collection to export_collection propertiy  
+        # TODO: Make default to active collection if none was given
+        layer_collection = bpy.context.view_layer.layer_collection.children[self.export_collection_name]
+        bpy.context.view_layer.active_layer_collection = layer_collection
+
         full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
         print('Preset: ' + context.scene.FBX_Preset)
 
@@ -175,9 +192,9 @@ class JAMExport_Op(bpy.types.Operator):
             print ("not using preset")
         #print('preset: ' + FBX_Presets_List[context.scene.FBX_Preset])
         #print("preset: " +  context.scene.FBX_Preset)
-        
+            
         if not args:
-            print ("using default export")
+            # print ("using default export")
             op = bpy.ops.export_scene.fbx('EXEC_DEFAULT',
                 filepath = full_filename,
                 check_existing = False, 
@@ -198,6 +215,30 @@ class JAMExport_Op(bpy.types.Operator):
         
         self.report({'INFO'}, 'Exported to ' + full_filename)
         
+        scn = context.scene
+        idx = scn.jam_export_sel_index
+        item = scn.jam_export_collections[idx]        
+        try:
+            item = scn.jam_export_collections[idx]
+        except IndexError:
+            pass
+        else:
+            act_coll = context.view_layer.active_layer_collection.collection
+            if act_coll.name in [c[1].export_collection.name for c in scn.jam_export_collections.items()]:
+                info = '"%s" already in the list' % (act_coll.name)
+            else:
+                item = scn.jam_export_collections.add()
+                item.export_collection = act_coll
+                item.name = item.export_collection.name
+                scn.jam_export_sel_index = (len(scn.jam_export_collections)-1)
+                info = '%s added to list' % (item.name)
+
+            # self.report({'INFO'}, info)        
+        # row.label(text=str(bpy.types.Scene.jam_export_sel_index))
+        
+        
+        
+        
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -209,7 +250,11 @@ class JAMExport_Op(bpy.types.Operator):
             context.window_manager.fileselect_add(self)
             return {'RUNNING_MODAL'}
         else:
-            self.directory = export_data.file_path
+            # print(self.directory)
+            if self.directory == '[[DEFAULT]]':
+                self.directory = export_data.file_path
+                # print('using export_data.file_path')
+                # print(export_data.file_path)
             return self.execute(context)
 
     def getpreset(self, preset):
@@ -260,10 +305,11 @@ class JAMExport_SetActiveCollection(bpy.types.Operator):
         )        
 
     # can't get this to work...
-    collection_to_activate : bpy.props.CollectionProperty(
-        name="Collection to Activate",
-        description="..."
-        )        
+    # collection_to_activate : bpy.props.CollectionProperty(
+    #    name="Collection to Activate",
+    #    description="...",e
+    #    type=bpy.types.LayerCollection
+    #    )        
         
     def execute(self, context):
         # scene_collection = bpy.context.view_layer.layer_collection
@@ -289,7 +335,7 @@ class JAMExport_RefreshPresets(bpy.types.Operator):
 def get_fbx_presets():
     preset_path = bpy.utils.preset_paths('operator/export_scene.fbx/')
     presets = os.listdir(preset_path[0])
-    print("get_fbx_presets: Refreshing project list " + str(len(presets)))
+    # print("get_fbx_presets: Refreshing project list " + str(len(presets)))
     
     # TODO: Ensure first key is unique, e.g. no duplicates or preset named '(None)'
     p = []
@@ -312,13 +358,12 @@ def removeEnding(thestring, ending):
 
 def register():    
     bpy.utils.register_class(JAMExportSettings)
-    bpy.utils.register_class(JAMExport_PT_panel)
-    bpy.utils.register_class(JAMExport_Op)
+    bpy.utils.register_class(JAM_EXPORT_PT_panel)
+    bpy.utils.register_class(JAM_EXPORT_OT_export)
     bpy.utils.register_class(JAMExport_SetActiveCollection)
-    
-   
 
     bpy.types.Scene.jam_export_data = bpy.props.PointerProperty(type=JAMExportSettings)
+
 
     # presets
     FBX_Presets_List = get_fbx_presets()
