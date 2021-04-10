@@ -374,8 +374,8 @@ def register():
 
 def unregister():
     bpy.utils.unregister_class(JAMExportSettings)
-    bpy.utils.unregister_class(JAMExport_PT_panel)
-    bpy.utils.unregister_class(JAMExport_Op)
+    bpy.utils.unregister_class(JAM_EXPORT_PT_panel)
+    bpy.utils.unregister_class(JAM_EXPORT_OT_export)
     bpy.utils.unregister_class(JAMExport_SetActiveCollection)
     
     del bpy.types.Scene.jam_export_data
