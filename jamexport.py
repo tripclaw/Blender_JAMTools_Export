@@ -153,7 +153,6 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
     #    type=bpy.types.Collection
     # subtype='DIR_PATH'
 
-
     export_collection_name:  bpy.props.StringProperty(
         name="Export Collection",
         description="Collection to Export"
@@ -162,7 +161,18 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         # TO DO: Don't allow exporting from Scene Collection (root collection)
-        return context.view_layer.active_layer_collection is not None
+        # layer_collection = bpy.context.view_layer.layer_collection.children[self.export_collection_name]
+        #active_col = context.view_layer.active_layer_collection
+        # active_col = layer_collection
+        # if active_col is None:
+        #    return False
+        # if len(active_col.collection.objects) == 0:
+        #    return False
+        # export_collection_name
+        if bpy.context.scene.jam_export_sel_index == -1:
+            return False
+
+        return True
         # return context.object is not None
 
     def execute(self, context):
