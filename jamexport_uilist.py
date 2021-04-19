@@ -499,6 +499,18 @@ class JAMEXPORT_MT_AddCollectionMenu(bpy.types.Menu):
 
         count = 0
 
+        active_layer_collection = bpy.context.view_layer.active_layer_collection
+        
+        if active_layer_collection is not None:
+            skip = False
+            for it in context.scene.jam_export_collections:
+                if it.export_collection.name == active_layer_collection.collection.name:
+                    skip = True
+                    break   
+            if not skip:
+                layout.operator("jamexport.add_collection", icon='OUTLINER_COLLECTION', text=active_layer_collection.collection.name).export_collection_name = active_layer_collection.collection.name
+                layout.separator()
+        
         for c in traverse_tree(scene_master_collection):
 
             skip = False
@@ -507,6 +519,8 @@ class JAMEXPORT_MT_AddCollectionMenu(bpy.types.Menu):
                 continue
             
             if c.name == "Master Collection":
+                skip = True
+            elif c.name == active_layer_collection.collection.name:
                 skip = True
             else:
                 for it in context.scene.jam_export_collections:
