@@ -28,7 +28,8 @@ class JAMEXPORT_OT_actions(Operator):
             ('DOWN', "Down", ""),
             ('REMOVE', "Remove", ""),
             ('ADD', "Add", ""),
-            ('EXPORT', "Export", ""))
+            ('EXPORT', "Export", ""),
+            ('SELECT_OBJECTS', "Select Objects", ""))
     )
 
     @classmethod
@@ -60,9 +61,23 @@ class JAMEXPORT_OT_actions(Operator):
 
             elif self.action == 'REMOVE':
                 info = 'Item "%s" removed from list' % item.name
+                scn.jam_export_collections[idx].export_collection.color_tag = 'NONE'
                 scn.jam_export_sel_index -= 1
                 scn.jam_export_collections.remove(idx)
                 self.report({'INFO'}, info)
+
+            elif self.action == 'SELECT_OBJECTS':
+                info = 'Selecting "%s"' % item.name
+                col = scn.jam_export_collections[idx].export_collection
+                if col is not None:
+                    bpy.ops.object.select_all(action='DESELECT')
+                    for obj in col.all_objects:
+                        obj.select_set(True)
+
+                    # Convert from Collection to LayerCollection type (to do: find a better way)
+                    layer_collection = bpy.context.view_layer.layer_collection.children[col.name]
+                    bpy.context.view_layer.active_layer_collection = layer_collection
+
 
             # elif self.action == 'EXPORT':
             #    info = 'Export "%s"' % item.name
@@ -149,6 +164,7 @@ class JAMEXPORT_OT_add_collection(Operator):
                     item = scn.jam_export_collections.add()
                     item.export_layer_collection = context.view_layer.active_layer_collection
                     item.export_collection = act_coll
+                    act_coll.color_tag = 'COLOR_07'
                     item.name = item.export_collection.name
                     scn.jam_export_sel_index = (len(scn.jam_export_collections)-1)
                     info = '%s added to list' % (item.name)
@@ -333,12 +349,16 @@ class JAMEXPORT_UL_items(UIList):
             split_factor = 1.0
 
         # split = layout.split(factor=split_factor)
-        item_icon = 'FILE_BLANK'
+        item_icon = 'OUTLINER_COLLECTION'
         layer_collection = bpy.context.view_layer.layer_collection.children[item.export_collection.name]
 
         if is_active_collection:
-            item_icon = 'FILE'
+            item_icon = 'OUTLINER_COLLECTION'
 
+        if layer_collection.collection.color_tag != 'NONE':
+            item_icon = 'COLLECTION_' + layer_collection.collection.color_tag
+        
+        
         # if layer_collection == bpy.context.view_layer.active_layer_collection:
         #    item_icon = 'COLLECTION_NEW'
             #bpy.context.view_layer.active_layer_collection = layer_collection
@@ -380,6 +400,8 @@ class JAMEXPORT_PT_objectList(Panel):
         col.separator()
         col.operator("jamexport.list_action", icon='TRIA_UP', text="").action = 'UP'
         col.operator("jamexport.list_action", icon='TRIA_DOWN', text="").action = 'DOWN'
+        col.separator()
+        col.operator("jamexport.list_action", icon='RESTRICT_SELECT_OFF', text="").action = 'SELECT_OBJECTS'
 
         # row = layout.row()
         # col = row.column(align=True)
