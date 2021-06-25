@@ -61,7 +61,8 @@ class JAMEXPORT_OT_actions(Operator):
 
             elif self.action == 'REMOVE':
                 info = 'Item "%s" removed from list' % item.name
-                scn.jam_export_collections[idx].export_collection.color_tag = 'NONE'
+                if scn.jam_export_collections[idx].export_collection is not None:
+                    scn.jam_export_collections[idx].export_collection.color_tag = 'NONE'
                 scn.jam_export_sel_index -= 1
                 scn.jam_export_collections.remove(idx)
                 self.report({'INFO'}, info)
@@ -341,29 +342,40 @@ class JAMEXPORT_UL_items(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
 
         is_selected = index == context.scene.jam_export_sel_index
-        is_active_collection = item.export_collection.name == bpy.context.view_layer.active_layer_collection.name
+        is_active_collection = False
+        item_name = "?"
+        item_icon = "ERROR"
+        
+        if item.export_collection is not None:        
+            item_name = item.export_collection.name
+            is_active_collection = item_name == bpy.context.view_layer.active_layer_collection.name
 
-        if is_active_collection:
-            split_factor = 0.8
-        else:
-            split_factor = 1.0
+            # if is_active_collection:
+            #    split_factor = 0.8
+            # else:
+            #    split_factor = 1.0
 
-        # split = layout.split(factor=split_factor)
-        item_icon = 'OUTLINER_COLLECTION'
-        layer_collection = bpy.context.view_layer.layer_collection.children[item.export_collection.name]
+            # split = layout.split(factor=split_factor)
 
-        if is_active_collection:
             item_icon = 'OUTLINER_COLLECTION'
+            layer_collection = bpy.context.view_layer.layer_collection.children[item_name]
 
-        if layer_collection.collection.color_tag != 'NONE':
-            item_icon = 'COLLECTION_' + layer_collection.collection.color_tag
+            if is_active_collection:
+                item_icon = 'OUTLINER_COLLECTION'
+
+            if layer_collection.collection.color_tag != 'NONE':
+                item_icon = 'COLLECTION_' + layer_collection.collection.color_tag
         
         
-        # if layer_collection == bpy.context.view_layer.active_layer_collection:
-        #    item_icon = 'COLLECTION_NEW'
-            #bpy.context.view_layer.active_layer_collection = layer_collection
+            # if layer_collection == bpy.context.view_layer.active_layer_collection:
+            #    item_icon = 'COLLECTION_NEW'
+                #bpy.context.view_layer.active_layer_collection = layer_collection
 
-        layout.prop(item.export_collection, "name", text="", emboss=False, icon=item_icon)
+            layout.prop(item.export_collection, "name", text="", emboss=False, icon=item_icon)
+        
+        else:
+            
+            layout.label(text="<Missing> " + item.name, icon="ERROR")
 
         # if is_selected: 
         #    export_op = split.operator("export.quick_fbx", text="", icon="EXPORT")
