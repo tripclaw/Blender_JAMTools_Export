@@ -71,14 +71,16 @@ class JAMEXPORT_OT_actions(Operator):
                 info = 'Selecting "%s"' % item.name
                 col = scn.jam_export_collections[idx].export_collection
                 if col is not None:
-                    bpy.ops.object.select_all(action='DESELECT')
-                    for obj in col.all_objects:
-                        obj.select_set(True)
+                    
+                    layer_collection = find_layer_collection(col.name)                    
+                    
+                    if layer_collection is not None:
+                        
+                        bpy.ops.object.select_all(action='DESELECT')
+                        for obj in col.all_objects:
+                            obj.select_set(True)
 
-                    # Convert from Collection to LayerCollection type (to do: find a better way)
-                    layer_collection = bpy.context.view_layer.layer_collection.children[col.name]
-                    bpy.context.view_layer.active_layer_collection = layer_collection
-
+                        bpy.context.view_layer.active_layer_collection = layer_collection
 
             # elif self.action == 'EXPORT':
             #    info = 'Export "%s"' % item.name
@@ -358,13 +360,16 @@ class JAMEXPORT_UL_items(UIList):
             # split = layout.split(factor=split_factor)
 
             item_icon = 'OUTLINER_COLLECTION'
-            layer_collection = bpy.context.view_layer.layer_collection.children[item_name]
 
-            if is_active_collection:
-                item_icon = 'OUTLINER_COLLECTION'
+            layer_collection = find_layer_collection(item_name)
 
-            if layer_collection.collection.color_tag != 'NONE':
-                item_icon = 'COLLECTION_' + layer_collection.collection.color_tag
+            if layer_collection is not None:
+
+                # if is_active_collection:
+                #    item_icon = 'OUTLINER_COLLECTION'
+
+                if layer_collection.collection.color_tag != 'NONE':
+                    item_icon = 'COLLECTION_' + layer_collection.collection.color_tag
         
         
             # if layer_collection == bpy.context.view_layer.active_layer_collection:
@@ -577,6 +582,17 @@ def traverse_tree(t):
     for child in t.children:
         yield from traverse_tree(child)
 
+def get_all_layer_collections(layer_collection):
+    for col in layer_collection.children:
+        yield col
+        yield from get_all_layer_collections(col)
+
+def find_layer_collection(layer_collection_name):
+    collections = get_all_layer_collections(bpy.context.view_layer.layer_collection)
+    for col in collections:
+        if col.name == layer_collection_name:
+            return col
+    return None        
 
 # ############################################
 #   Collection

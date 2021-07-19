@@ -187,7 +187,15 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 
         # Change active collection to export_collection propertiy  
         # TODO: Make default to active collection if none was given
-        layer_collection = bpy.context.view_layer.layer_collection.children[self.export_collection_name]
+
+        layer_collection = find_layer_collection(self.export_collection_name)
+        
+        if layer_collection is None:
+        # if self.export_collection_name not in bpy.context.view_layer.layer_collection.children :
+            self.report({'ERROR'}, 'Did not export. Could not find collection named ' + self.export_collection_name)
+            return {'FINISHED'}
+            
+        # layer_collection = bpy.context.view_layer.layer_collection.children[self.export_collection_name]
         bpy.context.view_layer.active_layer_collection = layer_collection
 
         full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
@@ -365,6 +373,18 @@ def removeEnding(thestring, ending):
   return thestring
 
 
+def get_all_layer_collections(layer_collection):
+    for col in layer_collection.children:
+        yield col
+        yield from get_all_layer_collections(col)
+
+def find_layer_collection(layer_collection_name):
+    collections = get_all_layer_collections(bpy.context.view_layer.layer_collection)
+    for col in collections:
+        if col.name == layer_collection_name:
+            return col
+    return None    
+    
 
 def register():    
     bpy.utils.register_class(JAMExportSettings)
