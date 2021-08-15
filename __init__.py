@@ -1,8 +1,8 @@
 bl_info = {
-    "name": "JAM Tools",
+    "name": "JAM Tools: Export Manager",
     "category": "Mesh",
     "author": "JAM",
-    "description": "export",
+    "description": "A collection-based fbx export manager",
     "version": (0, 1),
     "location": "Side Panel",
     "blender": (2, 80, 0),
@@ -11,17 +11,9 @@ bl_info = {
 }
 
 import bpy
-
-#if "bpy" in locals():
-    #import importlib
-    #if "jamexport" in locals():
-        #importlib.reload(jamexport)
-#else:
-    #from . import jamexport
-    
+   
 from . import jamexport
 from . import jamexport_uilist
-
     
 def register():    
     jamexport.register()
