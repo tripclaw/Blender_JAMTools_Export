@@ -269,7 +269,7 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
             return {'RUNNING_MODAL'}
         else:
             # print(self.directory)
-            if self.directory == '[[DEFAULT]]':
+            if self.directory == '[[DEFAULT]]' or self.directory == '':
                 self.directory = export_data.file_path
                 # print('using export_data.file_path')
                 # print(export_data.file_path)
@@ -310,6 +310,51 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
                 #raise FileNotFoundError(preset_path[0] + preset + '.py')
         else:
             print ("error: preset path no good")
+
+
+
+class JAMExport_ExportAll(bpy.types.Operator):
+    """Tooltip"""
+
+    bl_idname = "export.quick_fbx_all"
+    bl_label = "Export all export collections to FBX to a stored path (JAM Tools)"
+
+    def execute(self, context):
+
+        scn = context.scene
+        count = 0
+
+        if len(scn.jam_export_collections) > 0:
+
+            for index, item in enumerate(scn.jam_export_collections):
+
+                if item is not None and item.export_collection is not None:
+
+                    print ("export " + item.export_collection.name)
+
+                    bpy.context.scene.jam_export_sel_index = index
+
+                    bpy.ops.export.quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name)
+
+                    count = count + 1
+                    # col.label(text=item.name + ".fbx", icon="FILE")
+                
+                    # col.separator()
+            
+                    # if len(item.export_collection.objects) == 0:
+                    #    col.label(text="Empty collection", icon="ERROR")
+                    #    col.enabled = False
+                    #else:
+                    #    export_op = col.operator("export.quick_fbx", text="Export", icon="EXPORT")
+                    #    export_op.directory = "[[DEFAULT]]"
+                    #    export_op.export_collection_name = item.export_collection.name
+
+        
+        self.report({'INFO'}, 'Exported ' + str(count) + ' items')
+
+        return {'FINISHED'}
+
+
 
 
 class JAMExport_SetActiveCollection(bpy.types.Operator):
@@ -391,6 +436,7 @@ def register():
     bpy.utils.register_class(JAM_EXPORT_PT_panel)
     bpy.utils.register_class(JAM_EXPORT_OT_export)
     bpy.utils.register_class(JAMExport_SetActiveCollection)
+    bpy.utils.register_class(JAMExport_ExportAll)
 
     bpy.types.Scene.jam_export_data = bpy.props.PointerProperty(type=JAMExportSettings)
 
@@ -407,6 +453,7 @@ def unregister():
     bpy.utils.unregister_class(JAM_EXPORT_PT_panel)
     bpy.utils.unregister_class(JAM_EXPORT_OT_export)
     bpy.utils.unregister_class(JAMExport_SetActiveCollection)
+    bpy.utils.unregister_class(JAMExport_ExportAll)
     
     del bpy.types.Scene.jam_export_data
 

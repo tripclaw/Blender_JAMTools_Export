@@ -472,6 +472,17 @@ class JAMEXPORT_PT_objectList(Panel):
         if hasattr(scn, "custom") and len(context.scene.custom) > 0:
             col.operator("custom.jam_tools_update_data", icon='TRIA_RIGHT', text="Update old data")
 
+        
+        
+        col.separator()
+        
+        row = layout.row()    
+    
+        col = row.column(align=True)        
+        if len(scn.jam_export_collections) > 0:
+            export_all_op = col.operator("export.quick_fbx_all", text="Export All", icon="EXPORT")
+
+
 
         # row = layout.row()
         # row.label(text='Debug')
