@@ -371,11 +371,13 @@ class JAMExport_RefreshPresets(bpy.types.Operator):
         FBX_Presets_List = get_fbx_presets()
         return {'FINISHED'}
     
-def get_fbx_presets():
+def get_fbx_presets():  
     preset_path = bpy.utils.preset_paths('operator/export_scene.fbx/')
-    presets = os.listdir(preset_path[0])
-    # print("get_fbx_presets: Refreshing project list " + str(len(presets)))
-    
+    if (len(preset_path) == 0):
+        presets = []
+    else:
+        presets = os.listdir(preset_path[0])
+   
     # TODO: Ensure first key is unique, e.g. no duplicates or preset named '(None)'
     p = []
     p.append(('(None)', '(None)', 'Use default settings provided by JAMExport'))    
