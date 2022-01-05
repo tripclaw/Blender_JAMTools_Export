@@ -89,7 +89,7 @@ class JAMEXPORT_OT_actions(Operator):
             #    layer_collection = bpy.context.view_layer.layer_collection.children[item.export_collection.name]
             #    bpy.context.view_layer.active_layer_collection = layer_collection
             
-            #    bpy.ops.export.quick_fbx("INVOKE_DEFAULT", directory="[[DEFAULT]]")
+            #    bpy.ops.export.jam_quick_fbx("INVOKE_DEFAULT", directory="[[DEFAULT]]")
 
             #    print(item.export_collection.name)
             #    self.report({'INFO'}, info)
@@ -383,7 +383,7 @@ class JAMEXPORT_UL_items(UIList):
             layout.label(text="<Missing> " + item.name, icon="ERROR")
 
         # if is_selected: 
-        #    export_op = split.operator("export.quick_fbx", text="", icon="EXPORT")
+        #    export_op = split.operator("export.jam_quick_fbx", text="", icon="EXPORT")
         #    export_op.directory = "[[DEFAULT]]"
         #    export_op.export_collection_name = item.export_collection.name
 
@@ -398,7 +398,7 @@ class JAMEXPORT_UL_items(UIList):
 class JAMEXPORT_PT_objectList(Panel):
     """Export Collections - A list of exported collections from this scene"""
     bl_label = "Export Collections"
-    bl_category = "JAM"
+    bl_category = "Export"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 
@@ -444,7 +444,7 @@ class JAMEXPORT_PT_objectList(Panel):
                     col.label(text="Empty collection", icon="ERROR")
                     col.enabled = False
                 else:
-                    export_op = col.operator("export.quick_fbx", text="Export", icon="EXPORT")
+                    export_op = col.operator("export.jam_quick_fbx", text="Export", icon="EXPORT")
                     export_op.directory = "[[DEFAULT]]"
                     export_op.export_collection_name = item.export_collection.name
             
@@ -480,7 +480,7 @@ class JAMEXPORT_PT_objectList(Panel):
     
         col = row.column(align=True)        
         if len(scn.jam_export_collections) > 0:
-            export_all_op = col.operator("export.quick_fbx_all", text="Export All", icon="EXPORT")
+            export_all_op = col.operator("export.jam_quick_fbx_all", text="Export All", icon="EXPORT")
 
 
 

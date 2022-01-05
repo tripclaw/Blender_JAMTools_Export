@@ -14,7 +14,7 @@ class JAMExportSettings(bpy.types.PropertyGroup):
 
 class JAM_EXPORT_PT_panel(bpy.types.Panel):
     bl_label = "Export Settings"
-    bl_category = "JAM"
+    bl_category = "Export"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 
@@ -90,7 +90,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
         if is_active_collection:
             if not show_export_button:
                 op = row.operator('collection.set_active_collection', text=collection_name)        
-                export = row.operator('export.quick_fbx', text='', icon='EXPORT')
+                export = row.operator('export.jam_quick_fbx', text='', icon='EXPORT')
                 export.directory = "[[DEFAULT]]"
                 # sel_box = row.box();
 #               # row.heading
@@ -110,14 +110,14 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
             row = sublayout.row()
 
             if not does_file_exist and is_active_collection:
-                export = row.operator('export.quick_fbx', text='New Export', icon='FILE_NEW')
+                export = row.operator('export.jam_quick_fbx', text='New Export', icon='FILE_NEW')
                 export.directory = "[[DEFAULT]]"
                 
                 if not allow_export: 
                     row.enabled = False # gray out export if on Master Collection (root scene collection)
                 
             if does_file_exist and is_active_collection:
-                export = row.operator('export.quick_fbx', text='Export', icon='EXPORT')        
+                export = row.operator('export.jam_quick_fbx', text='Export', icon='EXPORT')        
                 export.directory = "[[DEFAULT]]"
                 
                 if not allow_export: 
@@ -126,7 +126,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
 
 class JAM_EXPORT_OT_export(bpy.types.Operator):
     """Export fbx to saved path"""
-    bl_idname = "export.quick_fbx"
+    bl_idname = "export.jam_quick_fbx"
     bl_label = "Export FBX to a stored path (JAM Tools)"
 
     directory: bpy.props.StringProperty(
@@ -292,7 +292,7 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 class JAMExport_ExportAll(bpy.types.Operator):
     """Tooltip"""
 
-    bl_idname = "export.quick_fbx_all"
+    bl_idname = "export.jam_quick_fbx_all"
     bl_label = "Export all export collections to FBX to a stored path (JAM Tools)"
 
     def execute(self, context):
@@ -310,7 +310,7 @@ class JAMExport_ExportAll(bpy.types.Operator):
 
                     bpy.context.scene.jam_export_sel_index = index
 
-                    bpy.ops.export.quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name)
+                    bpy.ops.export.jam_quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name)
 
                     count = count + 1
                     # col.label(text=item.name + ".fbx", icon="FILE")
@@ -321,7 +321,7 @@ class JAMExport_ExportAll(bpy.types.Operator):
                     #    col.label(text="Empty collection", icon="ERROR")
                     #    col.enabled = False
                     #else:
-                    #    export_op = col.operator("export.quick_fbx", text="Export", icon="EXPORT")
+                    #    export_op = col.operator("export.jam_quick_fbx", text="Export", icon="EXPORT")
                     #    export_op.directory = "[[DEFAULT]]"
                     #    export_op.export_collection_name = item.export_collection.name
 
