@@ -7,10 +7,10 @@ FBX_Presets_List = {}
 
 class JAMExportSettings(bpy.types.PropertyGroup):
     file_path: bpy.props.StringProperty(name="Path",
-                                        description="Path to export to",
-                                        default="",
-                                        maxlen=1024,
-                                        subtype="DIR_PATH")
+    description="Path to export to",
+    default="",
+    maxlen=1024,
+    subtype="DIR_PATH")
 
 class JAM_EXPORT_PT_panel(bpy.types.Panel):
     bl_label = "Export Settings"
@@ -92,7 +92,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 op = row.operator('collection.set_active_collection', text=collection_name)        
                 export = row.operator('export.jam_quick_fbx', text='', icon='EXPORT')
                 export.directory = "[[DEFAULT]]"
-                # sel_box = row.box();
+                # sel_box = row.box()
 #               # row.heading
                 # row.split(factor=0.0, align=False)
                 # row.label(text=collection_name)                
@@ -144,7 +144,7 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
     export_collection_name:  bpy.props.StringProperty(
         name="Export Collection",
         description="Collection to Export"
-    )
+        )
     
     @classmethod
     def poll(cls, context):
@@ -230,9 +230,6 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
             # self.report({'INFO'}, info)        
         # row.label(text=str(bpy.types.Scene.jam_export_sel_index))
         
-        
-        
-        
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -276,9 +273,9 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
                 if 'ui_tab' in args:
                     del args['ui_tab']
                 if 'use_selection' in args:
-                    del args['use_selection'];
+                    del args['use_selection']
                 if 'use_active_collection' in args:
-                    del args['use_active_collection'];
+                    del args['use_active_collection']
                 return args
             else:
                 print ('Preset doesn\'t exist: ' + preset)
@@ -290,8 +287,7 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 
 
 class JAMExport_ExportAll(bpy.types.Operator):
-    """Tooltip"""
-
+    """Export All Collections Defined in JAM Tools Export List"""
     bl_idname = "export.jam_quick_fbx_all"
     bl_label = "Export all export collections to FBX to a stored path (JAM Tools)"
 
@@ -324,13 +320,10 @@ class JAMExport_ExportAll(bpy.types.Operator):
                     #    export_op = col.operator("export.jam_quick_fbx", text="Export", icon="EXPORT")
                     #    export_op.directory = "[[DEFAULT]]"
                     #    export_op.export_collection_name = item.export_collection.name
-
         
         self.report({'INFO'}, 'Exported ' + str(count) + ' items')
 
         return {'FINISHED'}
-
-
 
 
 class JAMExport_SetActiveCollection(bpy.types.Operator):
@@ -384,7 +377,7 @@ def get_fbx_presets():
     for x in range(len(presets)):
         if (presets[x].endswith('.py')):
             p.append((removeEnding(presets[x], '.py'), removeEnding(presets[x], '.py'), presets[x]))
-    return p;   
+    return p   
 
 def preset_changed(self, context):
     print ("preset changed to " + context.scene.FBX_Preset)

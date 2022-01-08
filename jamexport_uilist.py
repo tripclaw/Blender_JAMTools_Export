@@ -82,22 +82,11 @@ class JAMEXPORT_OT_actions(Operator):
 
                         bpy.context.view_layer.active_layer_collection = layer_collection
 
-            # elif self.action == 'EXPORT':
-            #    info = 'Export "%s"' % item.name
-            
-                # Convert from Collection to LayerCollection type (to do: find a better way)
-            #    layer_collection = bpy.context.view_layer.layer_collection.children[item.export_collection.name]
-            #    bpy.context.view_layer.active_layer_collection = layer_collection
-            
-            #    bpy.ops.export.jam_quick_fbx("INVOKE_DEFAULT", directory="[[DEFAULT]]")
-
-            #    print(item.export_collection.name)
-            #    self.report({'INFO'}, info)
-
         if self.action == 'ADD':
 
             bpy.ops.wm.call_menu(name=JAMEXPORT_MT_AddCollectionMenu.bl_idname)
 
+            # ## Old way: Add current active collection
             # act_coll = context.view_layer.active_layer_collection.collection
             # if act_coll.name in [c[1].export_collection.name for c in scn.jam_export_collections.items()]:
             #    info = '"%s" already in the list. Change your active collection to add another.' % act_coll.name
@@ -138,7 +127,7 @@ class JAMEXPORT_OT_add_collection(Operator):
     #    type=bpy.types.Collection
     #)
     
-    # collection passed as string for now, because I can't figure out how to pass a collection
+    # collection passed as string for now, because I can't figure out how to pass a collection object at the moment...
     export_collection_name:  bpy.props.StringProperty(
         name="Export Collection",
         description="Collection to Export"
@@ -471,8 +460,7 @@ class JAMEXPORT_PT_objectList(Panel):
 
         if hasattr(scn, "custom") and len(context.scene.custom) > 0:
             col.operator("custom.jam_tools_update_data", icon='TRIA_RIGHT', text="Update old data")
-
-        
+       
         
         col.separator()
         
@@ -610,10 +598,7 @@ def find_layer_collection(layer_collection_name):
 # ############################################
 
 class JAMEXPORT_objectCollection(PropertyGroup):
-    # name: StringProperty() -> Instantiated by default
-    # export_layer_collection: bpy.props.PointerProperty(name="LayerCollection", type=bpy.types.LayerCollection)
     export_collection: bpy.props.PointerProperty(name="Collection", type=bpy.types.Collection)
-    # export_path: bpy.props.StringProperty(name="Export Path")
 
 # ############################################
 #   Register & Unregister
