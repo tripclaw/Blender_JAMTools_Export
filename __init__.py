@@ -4,7 +4,7 @@ bl_info = {
     "author": "Jason A Miller",
     "description": "An fbx export manager for collections",
     "version": (1, 0),
-    "location": "View3D > Side Panel > JAM",
+    "location": "View3D > Side Panel > Export",
     "blender": (2, 80, 0),
     "tracker_url": "",
     "wiki_url": "" ,
