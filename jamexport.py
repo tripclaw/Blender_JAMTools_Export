@@ -2,15 +2,22 @@ import bpy
 import os
 from bpy.types import Panel, Operator
 from bpy.props import EnumProperty
+from mathutils import Vector, Euler
 
 FBX_Presets_List = {}
 
 class JAMExportSettings(bpy.types.PropertyGroup):
     file_path: bpy.props.StringProperty(name="Path",
-    description="Path to export to",
-    default="",
-    maxlen=1024,
-    subtype="DIR_PATH")
+        description="Path to export to",
+        default="",
+        maxlen=1024,
+        subtype="DIR_PATH"
+        )
+    
+    zero_out_transforms: bpy.props.BoolProperty(name="Zero Out Transforms",
+        description="Zero Out Transforms on Export (requires single root object)",
+        default=False,
+        )
 
 class JAM_EXPORT_PT_panel(bpy.types.Panel):
     bl_label = "Export Settings"
@@ -27,6 +34,10 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
 
         row = layout.row()
         row.prop(context.scene, "FBX_Preset")
+
+        row = layout.row()
+        sublayout = layout.box()    
+        sublayout.prop(export_data, "zero_out_transforms")
         
         # sublayout = layout.box()    
         # sublayout.label(text='Active')
@@ -92,6 +103,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 op = row.operator('collection.set_active_collection', text=collection_name)        
                 export = row.operator('export.jam_quick_fbx', text='', icon='EXPORT')
                 export.directory = "[[DEFAULT]]"
+                export.zero_out_transforms = export_data.zero_out_transforms
                 # sel_box = row.box()
 #               # row.heading
                 # row.split(factor=0.0, align=False)
@@ -112,6 +124,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
             if not does_file_exist and is_active_collection:
                 export = row.operator('export.jam_quick_fbx', text='New Export', icon='FILE_NEW')
                 export.directory = "[[DEFAULT]]"
+                export.zero_out_transforms = export_data.zero_out_transforms
                 
                 if not allow_export: 
                     row.enabled = False # gray out export if on Master Collection (root scene collection)
@@ -119,6 +132,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
             if does_file_exist and is_active_collection:
                 export = row.operator('export.jam_quick_fbx', text='Export', icon='EXPORT')        
                 export.directory = "[[DEFAULT]]"
+                export.zero_out_transforms = export_data.zero_out_transforms
                 
                 if not allow_export: 
                     row.enabled = False # gray out export if on Master Collection (root scene collection)
@@ -145,6 +159,11 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
         name="Export Collection",
         description="Collection to Export"
         )
+
+    zero_out_transforms: bpy.props.BoolProperty(
+        name="Zero Out Position & Rotation",
+        description="Move & rotate the object to (0, 0, 0) on export."
+        )        
     
     @classmethod
     def poll(cls, context):
@@ -175,18 +194,39 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
         bpy.context.view_layer.active_layer_collection = layer_collection
 
         full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
-        print('Preset: ' + context.scene.FBX_Preset)
+        print('JAM Export Preset: ' + context.scene.FBX_Preset + " zero out transforms: " + str(self.zero_out_transforms))
 
         if context.scene.FBX_Preset.lower() != '(none)':
             args = self.getpreset(context.scene.FBX_Preset)
-            print("----- args: ------")
-            print(args)
+            # print("----- args: ------")
+            # print(args)
         else:
             args = []
-            print ("not using preset")
+            # print ("not using preset")
         #print('preset: ' + FBX_Presets_List[context.scene.FBX_Preset])
         #print("preset: " +  context.scene.FBX_Preset)
-            
+        root_obj = None
+        orig_pos = Vector((0, 0, 0))
+        orig_rot = Euler((0, 0, 0), 'XYZ')
+
+        if self.zero_out_transforms:
+            # check number of root items, for zero transforms
+            root_obj_count = len(layer_collection.collection.objects)
+            if root_obj_count == 1:
+                root_obj = layer_collection.collection.objects[0]
+            else:      
+                print("Cannot zero transforms on \'" + layer_collection.collection.name + "\' - Collection needs a single root object")
+                self.zero_out_transforms = False
+
+        if self.zero_out_transforms and root_obj is not None:
+            # print ("Zero transforms: " + str(self.zero_out_transforms) + " " + str(root_obj.location))
+            orig_pos = Vector(root_obj.location)
+            orig_rot = Euler(root_obj.rotation_euler)        
+            # print ("... orig_pos : " + str(orig_pos) + " " + str(orig_rot))
+            root_obj.location = (0, 0, 0)
+            root_obj.rotation_euler = Euler((0, 0, 0), 'XYZ')
+        
+        # call export    
         if not args:
             # print ("using default export")
             op = bpy.ops.export_scene.fbx('EXEC_DEFAULT',
@@ -206,6 +246,13 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
                 use_active_collection = True,
                 **args # arguments from preset
                 )            
+        
+
+        # restore positions
+        if self.zero_out_transforms and root_obj is not None:
+            # print ("restore pos " + str(orig_pos) + " ... " + str(orig_rot))
+            root_obj.location = orig_pos
+            root_obj.rotation_euler = orig_rot    
         
         self.report({'INFO'}, 'Exported to ' + full_filename)
         
@@ -294,8 +341,9 @@ class JAMExport_ExportAll(bpy.types.Operator):
     def execute(self, context):
 
         scn = context.scene
+        export_data = scn.jam_export_data
         count = 0
-
+        
         if len(scn.jam_export_collections) > 0:
 
             for index, item in enumerate(scn.jam_export_collections):
@@ -306,7 +354,7 @@ class JAMExport_ExportAll(bpy.types.Operator):
 
                     bpy.context.scene.jam_export_sel_index = index
 
-                    bpy.ops.export.jam_quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name)
+                    bpy.ops.export.jam_quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name, zero_out_transforms=export_data.zero_out_transforms)
 
                     count = count + 1
                     # col.label(text=item.name + ".fbx", icon="FILE")
