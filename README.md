@@ -4,7 +4,7 @@ A simple tool for remembering and automating exporting of FBX files, per collect
  
  ![Usage](demo/jam_export_tools_1.gif)
 
-- Export instantly, no thinking needed! Just set up your exports once and export any time. Allows for rapid iterations and updates between prorams.
+- Export instantly, no thinking needed! Just set up your exports once and export any time. Allows for rapid iterations and updates between programs.
 - Zero Out Transforms - An option for moving objects to origin position on export, so you can keep your objects arranged anywhere.
 - Never have to worry about selecting the right collection, path or filename again, with easy 1-click exports. 
 - Presets can be applied, but the default (None) works well for props/environment art.
