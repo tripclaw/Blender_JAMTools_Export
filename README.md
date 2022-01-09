@@ -1,7 +1,5 @@
-# Blender_JAMTools
-JAMTools for Blender
-
 JAMTools Export Manager
+
 A simple tool for remembering and automating exporting of FBX files, per collection. Remembers the path and makes exporting multiple assets effortless. 
  
  ![Usage](demo/jam_export_tools_1.gif)
