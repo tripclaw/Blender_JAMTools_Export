@@ -1,12 +1,12 @@
 JAMTools Export Manager
 
-A simple tool for remembering and automating exporting of FBX files, per collection. Remembers the path and makes exporting multiple assets effortless. 
+A simple tool for automating exports of FBX files, per collection. Remembers the path and makes exporting multiple assets effortless. 
  
  ![Usage](demo/jam_export_tools_1.gif)
 
-- Export instantly, no thinking needed! Just set up your exports once and export any time. Allows for rapid iterations and updates between programs.
-- Zero Out Transforms - An option for moving objects to origin position on export, so you can keep your objects arranged anywhere.
+- Export instantly, no thinking needed! Just set up your exports once and export any time.
 - Never have to worry about selecting the right collection, path or filename again, with easy 1-click exports. 
+- Zero Out Transforms - An option for moving objects to origin position on export, so you can keep your objects arranged anywhere.
 - Presets can be applied, but the default (None) works well for props/environment art.
 - Export All to export everything easily.
 - Supports relative paths.
