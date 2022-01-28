@@ -435,7 +435,7 @@ class JAMEXPORT_PT_objectList(Panel):
                 else:
                     export_op = col.operator("export.jam_quick_fbx", text="Export", icon="EXPORT")
                     export_op.directory = "[[DEFAULT]]"
-                    export_op.zero_transforms = True
+                    export_op.zero_out_transforms = True
                     export_op.export_collection_name = item.export_collection.name
             
         else:
