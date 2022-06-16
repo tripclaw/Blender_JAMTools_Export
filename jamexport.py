@@ -19,6 +19,17 @@ class JAMExportSettings(bpy.types.PropertyGroup):
         default=False,
         )
 
+    export_format_enum : bpy.props.EnumProperty(
+        name= "Format",
+        description="Select an export format",
+        items = [
+            ('FBX', "fbx", "FBX"),
+            ('GLTF', "gltf", "GLTF"),
+            ('GLB', "glb", "GLB")
+        ]
+    )
+
+
 class JAM_EXPORT_PT_panel(bpy.types.Panel):
     bl_label = "Export Settings"
     bl_category = "Export"
@@ -31,6 +42,9 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
 
         export_data = context.scene.jam_export_data
         row.prop(export_data, "file_path")
+
+        row = layout.row()
+        row.prop(export_data, "export_format_enum")
 
         row = layout.row()
         row.prop(context.scene, "FBX_Preset")
@@ -63,6 +77,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
 
         file_icon='PLUS'
         allow_export = True
+        file_ext = '.fbx'
 
         does_file_exist = False
 
@@ -72,7 +87,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 file_icon = 'PLUS'                    
         else:
             abspath = bpy.path.abspath(export_data.file_path)
-            full_filename = os.path.join(abspath, collection.name + ".fbx")
+            full_filename = os.path.join(abspath, collection.name + file_ext)
             if os.path.isfile(full_filename):
                 file_icon = 'FILE' #CHECKMARK
                 does_file_exist  = True  
@@ -94,7 +109,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
         
         if does_file_exist:
             status_icon = 'DECORATE_KEYFRAME'
-            collection_name = collection.name + ".fbx"
+            collection_name = collection.name + file_ext
         
         row.label(text='', icon=status_icon)
                   
@@ -104,6 +119,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 export = row.operator('export.jam_quick_fbx', text='', icon='EXPORT')
                 export.directory = "[[DEFAULT]]"
                 export.zero_out_transforms = export_data.zero_out_transforms
+                export.export_format = export_data.export_format_enum
                 # sel_box = row.box()
 #               # row.heading
                 # row.split(factor=0.0, align=False)
@@ -125,7 +141,8 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 export = row.operator('export.jam_quick_fbx', text='New Export', icon='FILE_NEW')
                 export.directory = "[[DEFAULT]]"
                 export.zero_out_transforms = export_data.zero_out_transforms
-                
+                export.export_format = export_data.export_format_enum
+            
                 if not allow_export: 
                     row.enabled = False # gray out export if on Master Collection (root scene collection)
                 
@@ -133,6 +150,7 @@ class JAM_EXPORT_PT_panel(bpy.types.Panel):
                 export = row.operator('export.jam_quick_fbx', text='Export', icon='EXPORT')        
                 export.directory = "[[DEFAULT]]"
                 export.zero_out_transforms = export_data.zero_out_transforms
+                export.export_format = export_data.export_format_enum
                 
                 if not allow_export: 
                     row.enabled = False # gray out export if on Master Collection (root scene collection)
@@ -148,6 +166,11 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
         description="Path to Export To (Relative or Absolute)"
         # subtype='DIR_PATH'
         )
+        
+    export_format: bpy.props.StringProperty(
+        name="Export Format",
+        description="Export Format (FBX, GLTF, GLB)"
+        )        
 
     # export_collection = bpy.props.PointerProperty(
     #    name="Export Collection",
@@ -177,6 +200,13 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 
         abspath = bpy.path.abspath(self.directory)
 
+        if self.export_format == 'GLTF':
+            file_ext = '.gltf'
+        elif self.export_format == 'GLB':
+            file_ext = '.glb'
+        else:
+            file_ext = '.fbx' # default is fbx
+            
         if not os.path.exists(abspath):
             self.report({'ERROR'}, 'Path does not exist: ' + abspath)
             return {'CANCELLED'}
@@ -193,7 +223,7 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
         # layer_collection = bpy.context.view_layer.layer_collection.children[self.export_collection_name]
         bpy.context.view_layer.active_layer_collection = layer_collection
 
-        full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + ".fbx")
+        full_filename = os.path.join(abspath, bpy.context.view_layer.active_layer_collection.name + file_ext)
         print('JAM Export Preset: ' + context.scene.FBX_Preset + " zero out transforms: " + str(self.zero_out_transforms))
 
         if context.scene.FBX_Preset.lower() != '(none)':
@@ -228,25 +258,41 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
         
         # call export    
         if not args:
-            # print ("using default export")
-            op = bpy.ops.export_scene.fbx('EXEC_DEFAULT',
-                filepath = full_filename,
-                check_existing = False, 
-                use_selection = False,
-                use_active_collection = True,
-                bake_space_transform = True,
-                object_types = {'ARMATURE', 'EMPTY', 'MESH', 'OTHER'},
-                use_tspace = True,
-                bake_anim = False
-            )
+            print ("export_format: " + self.export_format)
+            if self.export_format == 'GLTF' or self.export_format == 'GLB':
+                bpy.ops.export_scene.gltf('EXEC_DEFAULT',
+                    filepath = full_filename,
+                    check_existing = False, 
+                    use_selection = False,
+                    use_active_collection = True
+                )
+            else :
+                op = bpy.ops.export_scene.fbx('EXEC_DEFAULT',
+                    filepath = full_filename,
+                    check_existing = False, 
+                    use_selection = False,
+                    use_active_collection = True,
+                    bake_space_transform = True,
+                    object_types = {'ARMATURE', 'EMPTY', 'MESH', 'OTHER'},
+                    use_tspace = True,
+                    bake_anim = False
+                )
         else:
-            op = bpy.ops.export_scene.fbx('EXEC_DEFAULT', 
-                filepath = full_filename, 
-                use_selection = False,
-                use_active_collection = True,
-                **args # arguments from preset
-                )            
-        
+            if self.export_format == 'GLTF' or self.export_format == 'GLB':
+                bpy.ops.export_scene.gltf('EXEC_DEFAULT',
+                    filepath = full_filename, 
+                    use_selection = False,
+                    use_active_collection = True,
+                    **args # arguments from preset
+                    )            
+            else :
+                op = bpy.ops.export_scene.fbx('EXEC_DEFAULT', 
+                    filepath = full_filename, 
+                    use_selection = False,
+                    use_active_collection = True,
+                    **args # arguments from preset
+                    )            
+                
 
         # restore positions
         if self.zero_out_transforms and root_obj is not None:

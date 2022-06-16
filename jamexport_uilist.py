@@ -330,6 +330,7 @@ class JAMEXPORT_OT_updateData(Operator):
 
 class JAMEXPORT_UL_items(UIList):
     """Export Collections UIList Item"""
+    
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
 
         is_selected = index == context.scene.jam_export_sel_index
@@ -394,7 +395,9 @@ class JAMEXPORT_PT_objectList(Panel):
     def draw(self, context):
         layout = self.layout
         scn = bpy.context.scene
-
+        export_data = scn.jam_export_data
+        file_ext = scn.jam_export_data.export_format_enum.lower()
+    
         rows = 2
         row = layout.row()
         row.template_list("JAMEXPORT_UL_items", "", scn, "jam_export_collections", scn, "jam_export_sel_index", rows=rows)
@@ -425,8 +428,8 @@ class JAMEXPORT_PT_objectList(Panel):
 
             if item is not None and item.export_collection is not None:
 
-                col.label(text=item.name + ".fbx", icon="FILE")
-            
+                col.label(text=item.name + "." + file_ext, icon="FILE")
+                
                 col.separator()
         
                 if len(item.export_collection.objects) == 0:
@@ -435,8 +438,9 @@ class JAMEXPORT_PT_objectList(Panel):
                 else:
                     export_op = col.operator("export.jam_quick_fbx", text="Export", icon="EXPORT")
                     export_op.directory = "[[DEFAULT]]"
-                    export_op.zero_transforms = True
+                    export_op.zero_out_transforms = export_data.zero_out_transforms
                     export_op.export_collection_name = item.export_collection.name
+                    export_op.export_format = export_data.export_format_enum
             
         else:
             # col.label(text=bpy.context.view_layer.active_layer_collection.name, icon="FILE")
@@ -454,7 +458,7 @@ class JAMEXPORT_PT_objectList(Panel):
         #    col.label(text=bpy.context.view_layer.active_layer_collection.name, icon="FILE")
         #    col.separator()
         #    col.operator("custom.list_action", icon='ADD', text="Add").action = 'ADD'
-        
+
 
         row = layout.row()
         col = row.column(align=True)
