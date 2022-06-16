@@ -241,11 +241,20 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 
         if self.zero_out_transforms:
             # check number of root items, for zero transforms
-            root_obj_count = len(layer_collection.collection.objects)
+            root_obj_count = 0
+            for obj in layer_collection.collection.objects:
+                if obj.parent is None:
+                    root_obj_count += 1;
+                    root_obj = obj;
+                    print("obj: ", obj.name)
+            # root_obj_count = len(layer_collection.collection.objects)
             if root_obj_count == 1:
+                print("Zero out root: " + root_obj.name)
                 root_obj = layer_collection.collection.objects[0]
             else:      
-                print("Cannot zero transforms on \'" + layer_collection.collection.name + "\' - Collection needs a single root object")
+                print("Cannot zero transforms on \'" + layer_collection.collection.name + "\' - Collection needs a single root object (has " + str(root_obj_count) + ")" + " " + str(layer_collection.collection.objects))
+
+
                 self.zero_out_transforms = False
 
         if self.zero_out_transforms and root_obj is not None:
