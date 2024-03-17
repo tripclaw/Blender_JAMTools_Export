@@ -25,7 +25,8 @@ class JAMExportSettings(bpy.types.PropertyGroup):
         items = [
             ('FBX', "fbx", "FBX"),
             ('GLTF', "gltf", "GLTF"),
-            ('GLB', "glb", "GLB")
+            ('GLB', "glb", "GLB"),
+            ('USD', "usd", "USD")
         ]
     )
 
@@ -200,10 +201,15 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
 
         abspath = bpy.path.abspath(self.directory)
 
+        requires_selection = False
+
         if self.export_format == 'GLTF':
             file_ext = '.gltf'
         elif self.export_format == 'GLB':
             file_ext = '.glb'
+        elif self.export_format == 'USD':
+            file_ext = '.usdc'
+            requires_selection = True
         else:
             file_ext = '.fbx' # default is fbx
             
@@ -265,6 +271,17 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
             root_obj.location = (0, 0, 0)
             root_obj.rotation_euler = Euler((0, 0, 0), 'XYZ')
         
+        if requires_selection:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            col = bpy.data.collections[self.export_collection_name]
+            layer_collection = find_layer_collection(self.export_collection_name)                                    
+            if layer_collection is not None:                        
+                bpy.ops.object.select_all(action='DESELECT')
+                for obj in col.all_objects:
+                    obj.select_set(True)
+            bpy.context.view_layer.active_layer_collection = layer_collection        
+
+        
         # call export    
         if not args:
             print ("export_format: " + self.export_format)
@@ -275,6 +292,11 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
                     use_selection = False,
                     use_active_collection = True
                 )
+            elif self.export_format == 'USD':
+                bpy.ops.wm.usd_export(
+                    filepath=full_filename,
+                    selected_objects_only = True,
+                    use_instancing = True)
             else :
                 op = bpy.ops.export_scene.fbx('EXEC_DEFAULT',
                     filepath = full_filename,
@@ -294,6 +316,13 @@ class JAM_EXPORT_OT_export(bpy.types.Operator):
                     use_active_collection = True,
                     **args # arguments from preset
                     )            
+            elif self.export_format == 'USD':
+                bpy.ops.wm.usd_export(
+                    filepath=full_filename,
+                    selected_objects_only = True,
+                    use_instancing = True
+                    **args # arguments from preset                    
+                    )
             else :
                 op = bpy.ops.export_scene.fbx('EXEC_DEFAULT', 
                     filepath = full_filename, 
