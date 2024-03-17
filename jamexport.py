@@ -409,7 +409,10 @@ class JAMExport_ExportAll(bpy.types.Operator):
 
                     bpy.context.scene.jam_export_sel_index = index
 
-                    bpy.ops.export.jam_quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name, zero_out_transforms=export_data.zero_out_transforms)
+                    bpy.ops.export.jam_quick_fbx('INVOKE_DEFAULT', export_collection_name=item.export_collection.name, 
+                                                    zero_out_transforms=export_data.zero_out_transforms,
+                                                    export_format=export_data.export_format_enum
+                                                    )
 
                     count = count + 1
                     # col.label(text=item.name + ".fbx", icon="FILE")
